@@ -3,11 +3,12 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"time"
 )
 
-type item struct {
+type Item struct {
 	Name string
 	Url  string
 
@@ -17,10 +18,14 @@ type item struct {
 	UpdatedAt time.Time
 }
 
-type ModelServers []item
+type ModelServers []Item
 
-func (s *ModelServers) Add(name string, url string) {
-	server := item{
+func (s *ModelServers) Add(name string, url string) error {
+	if s.Find(name) {
+		return fmt.Errorf("server %v already exists", name)
+	}
+
+	server := Item{
 		Name:      name,
 		Url:       url,
 		CreatedAt: time.Now(),
@@ -28,9 +33,14 @@ func (s *ModelServers) Add(name string, url string) {
 	}
 
 	*s = append(*s, server)
+	return s.Store()
 }
 
-func (s *ModelServers) Remove(name string) {
+func (s *ModelServers) Remove(name string) error {
+	if !s.Find(name) {
+		return fmt.Errorf("server %v does not exists", name)
+	}
+
 	updated := ModelServers{}
 
 	for _, item := range *s {
@@ -40,9 +50,10 @@ func (s *ModelServers) Remove(name string) {
 	}
 
 	*s = updated
+	return s.Store()
 }
 
-func (s *ModelServers) Update(name string, server item) {
+func (s *ModelServers) Update(name string, server Item) error {
 	updated := ModelServers{}
 
 	for _, item := range *s {
@@ -54,10 +65,13 @@ func (s *ModelServers) Update(name string, server item) {
 	}
 
 	*s = updated
+	return s.Store()
 }
 
-func (s *ModelServers) Load(filename string) error {
-	file, err := os.ReadFile(filename)
+func (s *ModelServers) Load() error {
+	NEXUS_SERVERS_PATH := os.Getenv("NEXUS_SERVERS_PATH")
+
+	file, err := os.ReadFile(NEXUS_SERVERS_PATH)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return nil
@@ -78,16 +92,28 @@ func (s *ModelServers) Load(filename string) error {
 	return nil
 }
 
-func (s *ModelServers) Save(filename string) error {
+func (s *ModelServers) Store() error {
+	NEXUS_SERVERS_PATH := os.Getenv("NEXUS_SERVERS_PATH")
+
 	file, err := json.Marshal(*s)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(filename, file, 0644)
+	err = os.WriteFile(NEXUS_SERVERS_PATH, file, 0644)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (s *ModelServers) Find(name string) bool {
+	for _, server := range *s {
+		if server.Name == name {
+			return true
+		}
+	}
+
+	return false
 }
