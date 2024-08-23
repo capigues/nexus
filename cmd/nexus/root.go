@@ -20,8 +20,8 @@ func NewRootCmd(servers *ModelServers, out io.Writer, args []string) (*cobra.Com
 	cmd.AddCommand(
 		newAddCommand(servers, out),
 		newRemoveCommand(servers, out),
-	// newUpdateCommand(servers, out),
-	// newListCommand(servers,out),
+		// newUpdateCommand(servers, out),
+		newListCommand(servers, out),
 	)
 
 	return cmd, nil

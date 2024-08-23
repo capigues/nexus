@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"time"
+
+	"github.com/alexeyco/simpletable"
 )
 
 type Item struct {
@@ -68,6 +71,44 @@ func (s *ModelServers) Update(name string, server Item) error {
 	return s.Store()
 }
 
+func (s *ModelServers) List() error {
+	table := simpletable.New()
+	httpErrors := ""
+
+	table.Header = &simpletable.Header{
+		Cells: []*simpletable.Cell{
+			{Align: simpletable.AlignCenter, Text: "NAME"},
+			{Align: simpletable.AlignCenter, Text: "URL"},
+			{Align: simpletable.AlignCenter, Text: "UPDATED AT"},
+			{Align: simpletable.AlignCenter, Text: "STATUS"},
+		},
+	}
+
+	for _, server := range *s {
+		status, _ := s.CheckStatus(server.Url)
+		// Check status only returns nil right now
+		// if err != nil {
+		// 	fmt.Println(err.Error())
+		// }
+
+		row := []*simpletable.Cell{
+			{Align: simpletable.AlignCenter, Text: server.Name},
+			{Align: simpletable.AlignCenter, Text: server.Url},
+			{Align: simpletable.AlignCenter, Text: server.UpdatedAt.Format(time.ANSIC)},
+			{Align: simpletable.AlignCenter, Text: fmt.Sprintf("%v", status)},
+		}
+
+		table.Body.Cells = append(table.Body.Cells, row)
+	}
+
+	if len(httpErrors) > 0 {
+		return errors.New(httpErrors)
+	}
+
+	fmt.Println(table.String())
+	return nil
+}
+
 func (s *ModelServers) Load() error {
 	NEXUS_SERVERS_PATH := os.Getenv("NEXUS_SERVERS_PATH")
 
@@ -116,4 +157,29 @@ func (s *ModelServers) Find(name string) bool {
 	}
 
 	return false
+}
+
+type serverResponse string
+
+var (
+	Healthy   serverResponse = "Healthy"
+	Unhealthy serverResponse = "Unhealthy"
+)
+
+func (s *ModelServers) CheckStatus(url string) (serverResponse, error) {
+	client := http.Client{
+		Timeout: 3 * time.Second,
+	}
+
+	// Change these errors to go to a log file or debug
+	resp, err := client.Get(url)
+	if err != nil {
+		return Unhealthy, nil
+	}
+	// Check the HTTP status code
+	if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
+		return Healthy, nil
+	} else {
+		return Unhealthy, nil
+	}
 }
