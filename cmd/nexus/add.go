@@ -19,13 +19,16 @@ var validUrl = regexp.MustCompile(`https?://[^\s/$.?#].[^\s]*`)
 type addOptions struct {
 	name string
 	url  string
+
+	apiKey                string
+	InsecureSkipTLSVerify bool
 }
 
 func newAddCommand(servers *ModelServers, out io.Writer) *cobra.Command {
 	o := &addOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "add NAME URL",
+		Use:   "add NAME URL [flags]",
 		Short: "add a model serving api at url",
 		Long:  addDesc,
 		Args: func(cmd *cobra.Command, args []string) error {
@@ -42,13 +45,14 @@ func newAddCommand(servers *ModelServers, out io.Writer) *cobra.Command {
 				}
 			}
 
-			name, url := args[0], args[1]
+			o.name = args[0]
+			o.url = args[1]
 
-			if !alphanumeric.MatchString(name) {
+			if !alphanumeric.MatchString(o.name) {
 				return errors.New("name must only contain alphanumeric characters")
 			}
 
-			if !validUrl.MatchString(url) {
+			if !validUrl.MatchString(o.url) {
 				return errors.New("url must be valid url with http or https scheme")
 			}
 			return nil
@@ -69,6 +73,9 @@ func newAddCommand(servers *ModelServers, out io.Writer) *cobra.Command {
 			o.name = args[0]
 			o.url = args[1]
 
+			o.apiKey, _ = cmd.Flags().GetString("api-key")
+			o.InsecureSkipTLSVerify, _ = cmd.Flags().GetBool("verify-tls")
+
 			if err := servers.Add(o.name, o.url); err != nil {
 				fmt.Fprintf(out, "Could not add %s\nnexus: %v", o.name, err.Error())
 				return
@@ -77,6 +84,11 @@ func newAddCommand(servers *ModelServers, out io.Writer) *cobra.Command {
 			fmt.Fprintf(out, "Added %s\n", o.name)
 		},
 	}
+
+	f := cmd.Flags()
+
+	f.StringP("api-key", "k", "", "API Key for connecting to model serving api")
+	f.BoolP("verify-tls", "v", false, "API Key for connecting to model serving api")
 
 	return cmd
 }

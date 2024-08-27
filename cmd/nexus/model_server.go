@@ -16,6 +16,7 @@ type Item struct {
 	Url  string
 
 	// InsecureSkipTLSVerify bool
+	// Add fields that will be returned by /v1/models
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -34,6 +35,7 @@ func (s *ModelServers) Add(name string, url string) error {
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
+	// TODO: Call api to check status and get more information (/v1/models)
 
 	*s = append(*s, server)
 	return s.Store()
@@ -80,12 +82,12 @@ func (s *ModelServers) List() error {
 			{Align: simpletable.AlignCenter, Text: "NAME"},
 			{Align: simpletable.AlignCenter, Text: "URL"},
 			{Align: simpletable.AlignCenter, Text: "UPDATED AT"},
-			{Align: simpletable.AlignCenter, Text: "STATUS"},
+			// {Align: simpletable.AlignCenter, Text: "STATUS"},
 		},
 	}
 
 	for _, server := range *s {
-		status, _ := s.CheckStatus(server.Url)
+		// status, _ := s.CheckStatus(server.Url)
 		// Check status only returns nil right now
 		// if err != nil {
 		// 	fmt.Println(err.Error())
@@ -95,7 +97,7 @@ func (s *ModelServers) List() error {
 			{Align: simpletable.AlignCenter, Text: server.Name},
 			{Align: simpletable.AlignCenter, Text: server.Url},
 			{Align: simpletable.AlignCenter, Text: server.UpdatedAt.Format(time.ANSIC)},
-			{Align: simpletable.AlignCenter, Text: fmt.Sprintf("%v", status)},
+			// {Align: simpletable.AlignCenter, Text: fmt.Sprintf("%v", status)},
 		}
 
 		table.Body.Cells = append(table.Body.Cells, row)
