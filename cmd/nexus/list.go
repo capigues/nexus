@@ -9,7 +9,7 @@ import (
 )
 
 const listDesc = `
-ADD MORE
+List all the APIs managed by Nexus
 `
 
 func newListCommand(servers *ModelServers, out io.Writer) *cobra.Command {

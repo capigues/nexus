@@ -4,32 +4,20 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 	"os"
 	"time"
 
 	"github.com/alexeyco/simpletable"
 )
 
-type Item struct {
-	Name string
-	Url  string
-
-	// InsecureSkipTLSVerify bool
-	// Add fields that will be returned by /v1/models
-
-	CreatedAt time.Time
-	UpdatedAt time.Time
-}
-
-type ModelServers []Item
+type ModelServers []Server
 
 func (s *ModelServers) Add(name string, url string) error {
 	if s.Find(name) {
 		return fmt.Errorf("server %v already exists", name)
 	}
 
-	server := Item{
+	server := Server{
 		Name:      name,
 		Url:       url,
 		CreatedAt: time.Now(),
@@ -58,7 +46,7 @@ func (s *ModelServers) Remove(name string) error {
 	return s.Store()
 }
 
-func (s *ModelServers) Update(name string, server Item) error {
+func (s *ModelServers) Update(name string, server Server) error {
 	updated := ModelServers{}
 
 	for _, item := range *s {
@@ -159,29 +147,4 @@ func (s *ModelServers) Find(name string) bool {
 	}
 
 	return false
-}
-
-type serverResponse string
-
-var (
-	Healthy   serverResponse = "Healthy"
-	Unhealthy serverResponse = "Unhealthy"
-)
-
-func (s *ModelServers) CheckStatus(url string) (serverResponse, error) {
-	client := http.Client{
-		Timeout: 3 * time.Second,
-	}
-
-	// Change these errors to go to a log file or debug
-	resp, err := client.Get(url)
-	if err != nil {
-		return Unhealthy, nil
-	}
-	// Check the HTTP status code
-	if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
-		return Healthy, nil
-	} else {
-		return Unhealthy, nil
-	}
 }

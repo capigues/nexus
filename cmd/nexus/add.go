@@ -10,7 +10,7 @@ import (
 )
 
 const addDesc = `
-ADD MORE
+Add API to be managed by Nexus
 `
 
 var alphanumeric = regexp.MustCompile("^[a-zA-Z0-9_-]*$")
@@ -88,7 +88,7 @@ func newAddCommand(servers *ModelServers, out io.Writer) *cobra.Command {
 	f := cmd.Flags()
 
 	f.StringP("api-key", "k", "", "API Key for connecting to model serving api")
-	f.BoolP("verify-tls", "v", false, "API Key for connecting to model serving api")
+	f.BoolP("verify-tls", "v", false, "False to skip tls verification; default is true")
 
 	return cmd
 }

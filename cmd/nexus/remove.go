@@ -9,7 +9,7 @@ import (
 )
 
 const removeDesc = `
-ADD MORE
+Remove API from being managed by Nexus
 `
 
 type removeOptions struct {
