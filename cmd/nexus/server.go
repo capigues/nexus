@@ -51,10 +51,10 @@ type OpenAIErrorResponse struct {
 	Error openAIError `json:"error"`
 }
 
-func (s *Server) GetInfo() (*Server, error) {
+func (s *Server) GetInfo() error {
 	req, err := http.NewRequest("GET", s.Url+"/v1/models", nil)
 	if err != nil {
-		return nil, fmt.Errorf("%v", err.Error())
+		return fmt.Errorf("%v", err.Error())
 	}
 
 	tr := &http.Transport{}
@@ -77,17 +77,17 @@ func (s *Server) GetInfo() (*Server, error) {
 	resp, err := client.Do(req)
 	if err != nil {
 		if strings.Contains(err.Error(), "x509: certificate signed by unknown authority") {
-			return nil, fmt.Errorf("failed to verify certificate: x509: certificate signed by unknown authority")
+			return fmt.Errorf("failed to verify certificate: x509: certificate signed by unknown authority")
 		}
 
-		return nil, fmt.Errorf("unable to connect to %v. ", s.Url)
+		return fmt.Errorf("unable to connect to %v. ", s.Url)
 	}
 	defer resp.Body.Close()
 
 	// Read and buffer the response body
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// Create a buffer from the read body bytes
@@ -95,11 +95,11 @@ func (s *Server) GetInfo() (*Server, error) {
 
 	var errorData OpenAIErrorResponse
 	if err := json.NewDecoder(bodyBuffer).Decode(&errorData); err != nil {
-		return nil, err
+		return err
 	}
 
 	if strings.Contains(errorData.Error.Message, "API key") {
-		return nil, fmt.Errorf("you need to provide your API key")
+		return fmt.Errorf("you need to provide your API key")
 	}
 
 	// Reset the buffer to the start
@@ -109,11 +109,11 @@ func (s *Server) GetInfo() (*Server, error) {
 	var responseData ResponseData
 	if err := json.NewDecoder(bodyBuffer).Decode(&responseData); err != nil {
 		s.Status = Unhealthy
-		return nil, err
+		return err
 	}
 
 	s.ModelName = responseData.Data[0].ID
 	s.Status = Healthy
 
-	return s, nil
+	return nil
 }

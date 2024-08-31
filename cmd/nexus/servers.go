@@ -17,12 +17,12 @@ func (s *ModelServers) Add(server *Server) error {
 		return fmt.Errorf("API %v already exists", server.Name)
 	}
 
-	updatedServer, err := server.GetInfo()
+	err := server.GetInfo()
 	if err != nil {
 		return err
 	}
 
-	*s = append(*s, *updatedServer)
+	*s = append(*s, *server)
 	return s.Store()
 }
 
