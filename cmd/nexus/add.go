@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -67,6 +68,9 @@ func newAddCommand(servers *ModelServers, out io.Writer) *cobra.Command {
 
 			s.ApiKey, _ = cmd.Flags().GetString("api-key")
 			s.InsecureSkipTLSVerify, _ = cmd.Flags().GetBool("insecure-skip-tls-verify")
+
+			s.UpdatedAt = time.Now()
+			s.CreatedAt = time.Now()
 
 			if err := servers.Add(s); err != nil {
 				fmt.Fprintf(out, "Could not add %s\nnexus: %v\n", s.Name, err)

@@ -114,6 +114,7 @@ func (s *Server) GetInfo() error {
 
 	s.ModelName = responseData.Data[0].ID
 	s.Status = Healthy
+	s.UpdatedAt = time.Now()
 
 	return nil
 }
