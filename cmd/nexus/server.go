@@ -112,6 +112,10 @@ func (s *Server) GetInfo() error {
 		return err
 	}
 
+	if responseData.Data == nil {
+		return fmt.Errorf("could not refresh %v API. Is %v the correct url?", s.Name, s.Url)
+	}
+
 	s.ModelName = responseData.Data[0].ID
 	s.Status = Healthy
 	s.UpdatedAt = time.Now()

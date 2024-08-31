@@ -32,18 +32,27 @@ func newRefreshCommand(servers *ModelServers, out io.Writer) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
 				for _, server := range *servers {
-					server.GetInfo()
+					err := server.GetInfo()
+					if err != nil {
+						fmt.Fprintf(out, "%v\n", err.Error())
+						return
+					}
+
 					servers.Update(server.Name, server)
 				}
 				fmt.Fprintf(out, "Refreshed all APIs\n")
-
 				return
 			}
 
 			o.name = args[0]
 			for _, server := range *servers {
 				if server.Name == o.name {
-					server.GetInfo()
+					err := server.GetInfo()
+					if err != nil {
+						fmt.Fprintf(out, "%v\n", err.Error())
+						return
+					}
+
 					servers.Update(server.Name, server)
 
 					fmt.Fprintf(out, "Refreshed %v API\n", o.name)
