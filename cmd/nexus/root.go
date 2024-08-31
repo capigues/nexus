@@ -7,7 +7,7 @@ import (
 )
 
 const rootDesc = `
-Nexus is a API federation tool built for managing, monitoring and querying model serving APIs from one place. Currently only support vLLM model serving runtimes.
+Nexus is a API federation tool built for managing, monitoring and querying single model serving APIs from one place. Currently only support OpenAI single model serving runtimes.
 `
 
 func NewRootCmd(servers *ModelServers, out io.Writer, args []string) (*cobra.Command, error) {

@@ -16,16 +16,8 @@ Add API to be managed by Nexus
 var alphanumeric = regexp.MustCompile("^[a-zA-Z0-9_-]*$")
 var validUrl = regexp.MustCompile(`https?://[^\s/$.?#].[^\s]*`)
 
-type addOptions struct {
-	name string
-	url  string
-
-	apiKey                string
-	InsecureSkipTLSVerify bool
-}
-
 func newAddCommand(servers *ModelServers, out io.Writer) *cobra.Command {
-	o := &addOptions{}
+	s := &Server{}
 
 	cmd := &cobra.Command{
 		Use:   "add NAME URL [flags]",
@@ -45,14 +37,14 @@ func newAddCommand(servers *ModelServers, out io.Writer) *cobra.Command {
 				}
 			}
 
-			o.name = args[0]
-			o.url = args[1]
+			s.Name = args[0]
+			s.Url = args[1]
 
-			if !alphanumeric.MatchString(o.name) {
+			if !alphanumeric.MatchString(s.Name) {
 				return errors.New("name must only contain alphanumeric characters")
 			}
 
-			if !validUrl.MatchString(o.url) {
+			if !validUrl.MatchString(s.Url) {
 				return errors.New("url must be valid url with http or https scheme")
 			}
 			return nil
@@ -70,25 +62,25 @@ func newAddCommand(servers *ModelServers, out io.Writer) *cobra.Command {
 		// 	return comps, cobra.ShellCompDirectiveNoFileComp
 		// },
 		Run: func(cmd *cobra.Command, args []string) {
-			o.name = args[0]
-			o.url = args[1]
+			s.Name = args[0]
+			s.Url = args[1]
 
-			o.apiKey, _ = cmd.Flags().GetString("api-key")
-			o.InsecureSkipTLSVerify, _ = cmd.Flags().GetBool("verify-tls")
+			s.ApiKey, _ = cmd.Flags().GetString("api-key")
+			s.InsecureSkipTLSVerify, _ = cmd.Flags().GetBool("insecure-skip-tls-verify")
 
-			if err := servers.Add(o.name, o.url); err != nil {
-				fmt.Fprintf(out, "Could not add %s\nnexus: %v", o.name, err.Error())
+			if err := servers.Add(s); err != nil {
+				fmt.Fprintf(out, "Could not add %s\nnexus: %v\n", s.Name, err)
 				return
 			}
 
-			fmt.Fprintf(out, "Added %s\n", o.name)
+			fmt.Fprintf(out, "Added %s\n", s.Name)
 		},
 	}
 
 	f := cmd.Flags()
 
-	f.StringP("api-key", "k", "", "API Key for connecting to model serving api")
-	f.BoolP("verify-tls", "v", false, "False to skip tls verification; default is true")
+	f.StringP("api-key", "a", "", "API Key for connecting to model serving api")
+	f.BoolP("insecure-skip-tls-verify", "k", false, "False to skip tls verification; default is true")
 
 	return cmd
 }

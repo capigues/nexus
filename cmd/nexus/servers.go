@@ -12,26 +12,23 @@ import (
 
 type ModelServers []Server
 
-func (s *ModelServers) Add(name string, url string) error {
-	if s.Find(name) {
-		return fmt.Errorf("server %v already exists", name)
+func (s *ModelServers) Add(server *Server) error {
+	if s.Find(server.Name) {
+		return fmt.Errorf("API %v already exists", server.Name)
 	}
 
-	server := Server{
-		Name:      name,
-		Url:       url,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+	updatedServer, err := server.GetInfo()
+	if err != nil {
+		return err
 	}
-	// TODO: Call api to check status and get more information (/v1/models)
 
-	*s = append(*s, server)
+	*s = append(*s, *updatedServer)
 	return s.Store()
 }
 
 func (s *ModelServers) Remove(name string) error {
 	if !s.Find(name) {
-		return fmt.Errorf("server %v does not exists", name)
+		return fmt.Errorf("API %v does not exists", name)
 	}
 
 	updated := ModelServers{}
@@ -69,23 +66,19 @@ func (s *ModelServers) List() error {
 		Cells: []*simpletable.Cell{
 			{Align: simpletable.AlignCenter, Text: "NAME"},
 			{Align: simpletable.AlignCenter, Text: "URL"},
+			{Align: simpletable.AlignCenter, Text: "MODEL"},
 			{Align: simpletable.AlignCenter, Text: "UPDATED AT"},
-			// {Align: simpletable.AlignCenter, Text: "STATUS"},
+			{Align: simpletable.AlignCenter, Text: "STATUS"},
 		},
 	}
 
 	for _, server := range *s {
-		// status, _ := s.CheckStatus(server.Url)
-		// Check status only returns nil right now
-		// if err != nil {
-		// 	fmt.Println(err.Error())
-		// }
-
 		row := []*simpletable.Cell{
 			{Align: simpletable.AlignCenter, Text: server.Name},
 			{Align: simpletable.AlignCenter, Text: server.Url},
+			{Align: simpletable.AlignCenter, Text: server.ModelName},
 			{Align: simpletable.AlignCenter, Text: server.UpdatedAt.Format(time.ANSIC)},
-			// {Align: simpletable.AlignCenter, Text: fmt.Sprintf("%v", status)},
+			{Align: simpletable.AlignCenter, Text: fmt.Sprintf("%v", server.Status)},
 		}
 
 		table.Body.Cells = append(table.Body.Cells, row)
