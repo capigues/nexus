@@ -92,6 +92,10 @@ func (s *ModelServers) List() error {
 	return nil
 }
 
+func (s *ModelServers) Serve() error {
+	return nil
+}
+
 func (s *ModelServers) Load() error {
 	NEXUS_SERVERS_PATH := os.Getenv("NEXUS_SERVERS_PATH")
 
