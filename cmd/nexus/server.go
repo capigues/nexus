@@ -227,3 +227,21 @@ func generateResponse(messages []Message, modelName, apiKey, url string, insecur
 
 	return openaiResp.Choices[0].Message.Content
 }
+
+func (s *Server) createClient(request *http.Request) *http.Client {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: s.InsecureSkipTLSVerify},
+	}
+
+	request.Header.Add("Content-Type", "application/json")
+
+	if s.ApiKey != "" {
+		request.Header.Add("Authorization", "Bearer "+s.ApiKey)
+	}
+
+	client := &http.Client{
+		Transport: tr,
+	}
+
+	return client
+}
