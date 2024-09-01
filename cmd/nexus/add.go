@@ -73,7 +73,7 @@ func newAddCommand(servers *ModelServers, out io.Writer) *cobra.Command {
 			s.CreatedAt = time.Now()
 
 			if err := servers.Add(s); err != nil {
-				fmt.Fprintf(out, "Could not add %s\nnexus: %v\n", s.Name, err)
+				fmt.Fprintf(out, "Could not add %s\nnexus: %v\n", s.Name, err.Error())
 				return
 			}
 

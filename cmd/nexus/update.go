@@ -95,7 +95,7 @@ func newUpdateCommand(servers *ModelServers, out io.Writer) *cobra.Command {
 					updatedServer.UpdatedAt = time.Now()
 
 					if err := servers.Update(o.Name, *updatedServer); err != nil {
-						fmt.Fprintf(out, "Could not update %s\nnexus: %v\n", o.Name, err)
+						fmt.Fprintf(out, "Could not update %s\nnexus: %v\n", o.Name, err.Error())
 						return
 					}
 

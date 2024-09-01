@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
@@ -121,4 +123,107 @@ func (s *Server) GetInfo() error {
 	s.UpdatedAt = time.Now()
 
 	return nil
+}
+
+type Message struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+func (s *Server) Chat(temperature, max_tokens int) error {
+	fmt.Printf("Starting chat with %v temperature and %v max tokens\n", temperature, max_tokens)
+
+	// Create a scanner to read user input
+	scanner := bufio.NewScanner(os.Stdin)
+
+	messages := &[]Message{}
+
+	for {
+		// Prompt user for input
+		fmt.Print("You: ")
+		scanner.Scan()
+		userInput := scanner.Text()
+
+		// Check if the user wants to exit
+		if strings.ToLower(userInput) == "exit" {
+			fmt.Println("Goodbye!")
+			break
+		}
+
+		*messages = append(*messages, Message{
+			Role:    "user",
+			Content: userInput,
+		})
+		// Get response from the chatbot
+		response := generateResponse(*messages, s.ModelName, s.ApiKey, s.Url, s.InsecureSkipTLSVerify)
+		*messages = append(*messages, Message{
+			Role:    "assistant",
+			Content: response,
+		})
+
+		// Print the chatbot's response
+		fmt.Printf("%v: %v\n", s.ModelName, response)
+	}
+
+	return nil
+}
+
+type OpenAIChatRequest struct {
+	Model    string    `json:"model"`
+	Messages []Message `json:"messages"`
+}
+
+type OpenAIChatResponse struct {
+	Choices []struct {
+		Message struct {
+			Content string `json:"content"`
+		} `json:"message"`
+	} `json:"choices"`
+}
+
+func generateResponse(messages []Message, modelName, apiKey, url string, insecureSkipTLSVerify bool) string {
+
+	requestBody := OpenAIChatRequest{
+		Model:    modelName, // Replace with your model
+		Messages: messages,
+	}
+
+	reqBody, err := json.Marshal(requestBody)
+	if err != nil {
+		return "Error: Unable to marshal request body."
+	}
+
+	req, err := http.NewRequest("POST", url+"/v1/chat/completions", bytes.NewBuffer(reqBody))
+	if err != nil {
+		return "Error: Unable to create request."
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecureSkipTLSVerify},
+		},
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("ERROR: ", err.Error())
+		return "Error: Unable to complete request."
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "Error: Unable to read response body."
+	}
+
+	var openaiResp OpenAIChatResponse
+	err = json.Unmarshal(body, &openaiResp)
+	if err != nil {
+		return "Error: Unable to unmarshal response body."
+	}
+
+	return openaiResp.Choices[0].Message.Content
 }
