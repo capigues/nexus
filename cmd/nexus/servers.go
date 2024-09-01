@@ -93,6 +93,12 @@ func (s *ModelServers) List() error {
 }
 
 func (s *ModelServers) Serve() error {
+	// ENDPOINTS
+	// /health - If endpoint is healthy
+	// /v1/models - list of all API/Models managed by Nexus
+	// /version - version of this app?
+	// /v1/chat/completions - can use same request body and vllm endpoint but substitute model for Nexus API name to route traffic
+	// /v1/completion? - MAYBE. probably not in first iteration
 	return nil
 }
 
